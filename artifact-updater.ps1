@@ -11,7 +11,7 @@ param(
   [string]
   $currentArtifactPath,
 
-  [Parameter]
+  [Parameter()]
   [bool]
   $keepDownload = 1
 )
@@ -149,7 +149,21 @@ if (-not (Test-Path -Path $currentArtifactPath -PathType Container)) {
 $serverTLSCertificatePath = Join-Path -Path $currentArtifactPath -ChildPath "server-tls.crt"
 
 if (-not (Test-Path -Path $serverTLSCertificatePath -PathType Leaf)) {
-  throw "Supplied artifact path $currentArtifactPath is invalid, could not find 'server-tls.crt'. Please provide the root path to your current FXServer artifact folder."
+  $newInstallChoices = [System.Management.Automation.Host.ChoiceDescription[]] @("&Yes", "&No")
+  $newInstallChoice = $host.UI.PromptForChoice("server-tls.crt is missing from the current directory is this a new install?", "Enter your choice", $newInstallChoices, 0)
+
+  switch ($newInstallChoice) {  
+      0 { 
+        Write-Host "Yes contiunue with install"
+      }
+      1 { 
+        Write-Host "Installation canceled"
+        Exit 1
+      }
+      Default {
+        Exit 1
+      }
+  }
 }
 
 Write-Host "Validated artifact path"
